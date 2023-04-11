@@ -1,0 +1,12 @@
+http:
+  host: 'localhost-dev'
+  port: 8080
+
+db:
+  postgres:
+    url: 'localhost-dev'
+    port: 5432
+    database: 'yaml-db-dev'
+
+  sqlite:
+    database: 'sqlite-dev.db'

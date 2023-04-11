@@ -1,0 +1,11 @@
+http:
+  host: 'localhost'
+  port: 8080
+
+db:
+  postgres:
+    url: 'localhost'
+    port: 5432
+
+  sqlite:
+    database: 'sqlite.db'
