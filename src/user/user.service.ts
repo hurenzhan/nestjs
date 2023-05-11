@@ -49,6 +49,7 @@ export class UserService {
         return this.userRepository.delete(id);
     }
 
+    // 查询用户日志
     async findUserLogs(id: number): Promise<Logs[]> {
         const user = await this.findOne(id);
         return this.logsRepository.find({
@@ -57,6 +58,27 @@ export class UserService {
                 user: true,
             },
         });
+    }
+
+    // 根据 result 查询分组日志数量
+    findLogsByGroup(id: number) {
+        // return this.logsRepository.query(
+        //     `SELECT logs.result, COUNT(logs.result) AS count FROM logs, user WHERE user.id = logs.userId AND user.id = ${id} GROUP BY logs.result`,
+        // );
+        return (
+            this.logsRepository
+                .createQueryBuilder('logs')
+                .select('logs.result', 'result')
+                .addSelect('COUNT(logs.result)', 'count')
+                .leftJoinAndSelect('logs.user', 'user') // logs.user 为实体 Logs 中的 user 字段也是指向 User 实体的外键
+                .where('user.id = :id', { id })
+                .groupBy('logs.result')
+                .orderBy('count', 'DESC')
+                .addOrderBy('result', 'DESC') // 添加多个排序条件
+                // .offset(2)
+                .limit(3) // 查询前 3 条
+                .getRawMany()
+        );
     }
 
     getUsers(num: any): any {

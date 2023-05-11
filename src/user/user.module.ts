@@ -6,7 +6,10 @@ import { User } from './user.entity';
 import { Logs } from '../logs/logs.entity';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([User, Logs])],
+    imports: [
+        // 注入 User 和 Logs 实体
+        TypeOrmModule.forFeature([User, Logs]),
+    ],
     controllers: [UserController],
     providers: [UserService],
 })

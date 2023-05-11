@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, Logger, Post, Req } from '@nestjs/common';
 import { UserService } from './user.service';
 import { ConfigService } from '@nestjs/config';
 import { User } from './user.entity';
@@ -9,11 +9,15 @@ export class UserController {
     constructor(
         private userService: UserService,
         private configService: ConfigService,
-    ) {}
+        private readonly logger: Logger, // 全局注册的日志实例
+    ) {
+        this.logger.log('UserController init');
+    }
 
     // 查询所有用户
     @Get('queryAll')
     async getUsers(): Promise<User[]> {
+        this.logger.warn('请求 getUsers 接口成功');
         return this.userService.findAll();
     }
 
@@ -63,6 +67,14 @@ export class UserController {
     async getLogs(@Req() request): Promise<Logs[]> {
         const { id }: any = request.query;
         return this.userService.findUserLogs(id);
+    }
+
+    // 根据用户 id 查询日志结果分组统计
+    @Get('logsByGroup')
+    async getLogsByGroup(@Req() request): Promise<Logs[]> {
+        const { id }: any = request.query;
+        const res: any = await this.userService.findLogsByGroup(id);
+        return res?.map((item) => ({ result: item.result, count: item.count }));
     }
 
     // @Get()
