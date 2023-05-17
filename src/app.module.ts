@@ -6,12 +6,15 @@ import * as Joi from 'joi';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ConfigEnum } from './enum/config.enum';
 import { User } from './user/user.entity';
+import { LogsModule } from './logs/logs.module';
+import { RolesModule } from './roles/roles.module';
 import { Profile } from './user/profile.entity';
 import { Roles } from './roles/roles.entity';
 import { Logs } from './logs/logs.entity';
 import * as process from 'process';
 import { LoggerModule } from 'nestjs-pino';
 import { join } from 'path';
+
 // import configuration from './configuration';
 
 const envFilePath = `.env.${process.env.NODE_ENV || 'development'}`;
@@ -79,6 +82,8 @@ const envFilePath = `.env.${process.env.NODE_ENV || 'development'}`;
         //     },
         // }),
         UserModule,
+        LogsModule,
+        RolesModule,
     ],
     controllers: [],
     providers: [

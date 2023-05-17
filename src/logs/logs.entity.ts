@@ -16,7 +16,7 @@ export class Logs {
     path: string;
 
     @Column()
-    method: string;
+    methods: string;
 
     @Column()
     data: string;

@@ -1,14 +1,24 @@
-import { Body, Controller, Get, Logger, Post, Req } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Get,
+    Inject,
+    Logger,
+    Post,
+    Req,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { ConfigService } from '@nestjs/config';
 import { User } from './user.entity';
 import { Logs } from '../logs/logs.entity';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 @Controller('user')
 export class UserController {
     constructor(
         private userService: UserService,
         private configService: ConfigService,
+        @Inject(WINSTON_MODULE_NEST_PROVIDER) // 注入全局注册的日志实例
         private readonly logger: Logger, // 全局注册的日志实例
     ) {
         this.logger.log('UserController init');
