@@ -1,7 +1,7 @@
 import { SelectQueryBuilder } from 'typeorm';
 import * as _ from 'lodash';
 
-export const conditionUtils = <T>(
+export const conditionUtil_CO = <T>(
     queryBuilder: SelectQueryBuilder<T>,
     obj: Record<string, unknown>,
 ) => {

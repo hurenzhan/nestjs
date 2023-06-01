@@ -3,7 +3,7 @@ import { User } from './user.entity';
 import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Logs } from '../logs/logs.entity';
-import { conditionUtils } from '../utils/db.helper';
+import { conditionUtil_CO } from '../utils/db.helper';
 
 @Injectable()
 export class UserService {
@@ -75,7 +75,7 @@ export class UserService {
             .leftJoinAndSelect('user.profile', 'profile')
             .leftJoinAndSelect('user.roles', 'roles');
 
-        conditionUtils<User>(queryBuilder, obj);
+        conditionUtil_CO<User>(queryBuilder, obj);
 
         return queryBuilder.getMany();
 
