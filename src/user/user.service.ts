@@ -3,6 +3,7 @@ import { User } from './user.entity';
 import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Logs } from '../logs/logs.entity';
+import { conditionUtils } from '../utils/db.helper';
 
 @Injectable()
 export class UserService {
@@ -14,8 +15,82 @@ export class UserService {
     ) {}
 
     // 查询所有用户
-    findAll(): Promise<User[]> {
-        return this.userRepository.find();
+    findAll(query: getUserDto): Promise<User[]> {
+        const {
+            limit = 10,
+            page,
+            username = null,
+            gender = null,
+            role = null,
+        } = query;
+
+        // return this.userRepository.find({
+        //     select: {
+        //         id: true,
+        //         username: true,
+        //         profile: {
+        //             gender: true,
+        //         },
+        //         roles: {
+        //             name: true,
+        //         },
+        //     },
+        //     relations: {
+        //         profile: true,
+        //         roles: true,
+        //     },
+        //     where: {
+        //         username,
+        //         profile: {
+        //             gender,
+        //         },
+        //         roles: {
+        //             id: role,
+        //         },
+        //     },
+        //     take: limit, // 每页显示多少条
+        //     skip: (page - 1) * limit, // 跳过多少条
+        // });
+
+        // SELECT `User`.`id` AS `User_id`, `User`.`username` AS `User_username`, `User`.`password` AS `User_password`, `User__User_profile`.`id` AS `User__User_profile_id`, `User__User_profile`.`gender` AS `User__User_profile_gender`
+        // 	, `User__User_profile`.`photo` AS `User__User_profile_photo`, `User__User_profi
+        // le`.`address` AS `User__User_profile_address`, `User__User_profile`.`userId` AS `User__User_profile_userId`, `User__User_roles`.`id` AS `User__User_roles_id`, `User__User_roles`.`name` AS `User__User_roles_name`
+        // FROM `user` `User`
+        // 	LEFT JOIN `profile` `User__User_profile` ON `User__User_profile`.`userId` = `Use
+        // r`.`id`
+        // 	LEFT JOIN `user_roles` `User_User__User_roles` ON `User_User__User_roles`.`userId` = `User`.`id`
+        // 	LEFT JOIN `roles` `User__User_roles` ON `User__User_roles`.`id` = `User_User__User_roles`.`rolesId`
+        // WHERE `User__User_profile`.`gender` = ?
+        // 	AND `User__User_roles`.`id` = ?
+        // 	AND `User`.`id` IN (1)
+
+        const obj = {
+            'user.username': username,
+            'profile.gender': gender,
+            'roles.id': role,
+        };
+
+        const queryBuilder = this.userRepository
+            .createQueryBuilder('user')
+            .leftJoinAndSelect('user.profile', 'profile')
+            .leftJoinAndSelect('user.roles', 'roles');
+
+        conditionUtils<User>(queryBuilder, obj);
+
+        return queryBuilder.getMany();
+
+        // return queryBuilder.getMany();
+
+        // return this.userRepository
+        //     .createQueryBuilder('user')
+        //     .leftJoinAndSelect('user.profile', 'profile')
+        //     .leftJoinAndSelect('user.roles', 'roles')
+        //     .where(username ? 'user.username = :username' : 'TRUE', {
+        //         username,
+        //     })
+        //     .andWhere(gender ? 'profile.gender = :gender' : 'TRUE', { gender })
+        //     .andWhere(role ? 'roles.id = :role' : 'TRUE', { role })
+        //     .getMany();
     }
 
     // 根据用户 id 查询用户信息

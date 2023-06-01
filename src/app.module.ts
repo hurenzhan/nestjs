@@ -1,19 +1,13 @@
 import { Global, Logger, Module } from '@nestjs/common';
 import { UserModule } from './user/user.module';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import * as dotenv from 'dotenv';
 import * as Joi from 'joi';
-import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { ConfigEnum } from './enum/config.enum';
-import { User } from './user/user.entity';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { LogsModule } from './logs/logs.module';
 import { RolesModule } from './roles/roles.module';
-import { Profile } from './user/profile.entity';
-import { Roles } from './roles/roles.entity';
-import { Logs } from './logs/logs.entity';
 import * as process from 'process';
-import { LoggerModule } from 'nestjs-pino';
-import { join } from 'path';
+import { connectionParams } from '../ormconfig';
 
 // import configuration from './configuration';
 
@@ -42,23 +36,7 @@ const envFilePath = `.env.${process.env.NODE_ENV || 'development'}`;
             }),
         }),
         // 通过配置连接数据库
-        TypeOrmModule.forRootAsync({
-            imports: [ConfigModule],
-            inject: [ConfigService], // 读取配置文件
-            useFactory: (configService: ConfigService) =>
-                ({
-                    type: configService.get(ConfigEnum.DB_TYPE),
-                    host: configService.get(ConfigEnum.DB_HOST),
-                    port: configService.get(ConfigEnum.DB_PORT),
-                    username: configService.get(ConfigEnum.DB_USERNAME),
-                    password: configService.get(ConfigEnum.DB_PASSWORD),
-                    database: configService.get(ConfigEnum.DB_DATABASE),
-                    entities: [User, Profile, Roles, Logs],
-                    synchronize: configService.get(ConfigEnum.DB_SYNC),
-                    // logging: process.env.NODE_ENV === 'development',
-                    logging: false,
-                } as TypeOrmModuleOptions),
-        }),
+        TypeOrmModule.forRoot(connectionParams),
         // 注入日志模块
         // LoggerModule.forRoot({
         //     pinoHttp: {

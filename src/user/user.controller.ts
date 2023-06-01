@@ -1,10 +1,14 @@
 import {
     Body,
     Controller,
+    Delete,
     Get,
     Inject,
     Logger,
+    Param,
+    Patch,
     Post,
+    Query,
     Req,
 } from '@nestjs/common';
 import { UserService } from './user.service';
@@ -12,6 +16,7 @@ import { ConfigService } from '@nestjs/config';
 import { User } from './user.entity';
 import { Logs } from '../logs/logs.entity';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
+import { request } from 'express';
 
 @Controller('user')
 export class UserController {
@@ -25,10 +30,17 @@ export class UserController {
     }
 
     // 查询所有用户
-    @Get('queryAll')
-    async getUsers(): Promise<User[]> {
+    // @Get('queryAll')
+    // async getUsers(): Promise<User[]> {
+    //     this.logger.warn('请求 getUsers 接口成功');
+    //     return this.userService.findAll();
+    // }
+
+    // 查询用户
+    @Get()
+    async getUsers(@Query() query: getUserDto): Promise<User[]> {
         this.logger.warn('请求 getUsers 接口成功');
-        return this.userService.findAll();
+        return this.userService.findAll(query);
     }
 
     // 根据 id 查询用户信息
@@ -52,9 +64,9 @@ export class UserController {
     }
 
     // 更新用户
-    @Post('update')
-    updateUser(@Body() body: any): any {
-        const { id, username, password } = body;
+    @Post('update/:id')
+    updateUser(@Body() body: any, @Param('id') id: number): any {
+        const { username, password } = body;
 
         const user = {
             username,
@@ -65,10 +77,8 @@ export class UserController {
     }
 
     // 删除用户
-    @Post('remove')
-    removeUser(@Body() body: any): any {
-        const { id } = body;
-
+    @Delete('/:id')
+    removeUser(@Param('id') id: number): any {
         return this.userService.remove(id);
     }
 
