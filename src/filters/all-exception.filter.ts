@@ -7,6 +7,8 @@ import {
 } from '@nestjs/common';
 import { ArgumentsHost, Catch } from '@nestjs/common';
 import * as requestIp from 'request-ip';
+import { QueryFailedError } from 'typeorm';
+import { SQLErrorEnum } from '../enum/error.enum';
 
 @Catch()
 export class AllExceptionFilter implements ExceptionFilter {
@@ -35,8 +37,9 @@ export class AllExceptionFilter implements ExceptionFilter {
             // 还可以加入一些用户信息
             // IP信息
             ip: requestIp.getClientIp(request),
-            exceptioin: exception['name'],
+            exception: exception['name'],
             error: exception['response'] || 'Internal Server Error',
+            status: exception['status'],
         };
 
         this.logger.error('[toimc]', responseBody);

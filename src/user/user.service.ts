@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { User } from './user.entity';
 import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -111,7 +111,7 @@ export class UserService {
     // 创建用户
     async create(user: User): Promise<User> {
         const userEntity: User = await this.userRepository.create(user);
-        return this.userRepository.save(userEntity);
+        return await this.userRepository.save(userEntity);
     }
 
     // 根据 id 更新用户

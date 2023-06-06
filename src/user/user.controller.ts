@@ -6,19 +6,20 @@ import {
     Inject,
     Logger,
     Param,
-    Patch,
     Post,
     Query,
     Req,
+    UseFilters,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { ConfigService } from '@nestjs/config';
 import { User } from './user.entity';
 import { Logs } from '../logs/logs.entity';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
-import { request } from 'express';
+import { TypeormFilter } from '../filters/typeorm.filter';
 
 @Controller('user')
+@UseFilters(new TypeormFilter())
 export class UserController {
     constructor(
         private userService: UserService,

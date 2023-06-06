@@ -10,16 +10,13 @@ async function bootstrap() {
         // logger: false,
         // logger: ['error', 'warn'],
     });
-    app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER)); // 使用 nest-winston 覆盖默认的日志
+
+    const winstonLogger = app.get(WINSTON_MODULE_NEST_PROVIDER);
+    app.useLogger(winstonLogger); // 使用 nest-winston 覆盖默认的日志
     app.setGlobalPrefix('api/v1');
 
     const httpAdapter = app.get(HttpAdapterHost);
-    app.useGlobalFilters(
-        new AllExceptionFilter(
-            app.get(WINSTON_MODULE_NEST_PROVIDER),
-            httpAdapter,
-        ),
-    ); // 全局注册异常过滤器
+    app.useGlobalFilters(new AllExceptionFilter(winstonLogger, httpAdapter)); // 全局注册异常过滤器
 
     await app.listen(8081);
 }
