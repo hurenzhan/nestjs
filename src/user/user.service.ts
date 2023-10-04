@@ -15,92 +15,71 @@ export class UserService {
     ) {}
 
     // 查询所有用户
-    findAll(query: getUserDto): Promise<User[]> {
+    async findAll(query: getUserDto): Promise<User[]> {
         const {
             limit = 10,
-            page,
+            page = 1,
             username = null,
             gender = null,
             role = null,
         } = query;
 
-        // return this.userRepository.find({
-        //     select: {
-        //         id: true,
-        //         username: true,
-        //         profile: {
-        //             gender: true,
-        //         },
-        //         roles: {
-        //             name: true,
-        //         },
-        //     },
-        //     relations: {
-        //         profile: true,
-        //         roles: true,
-        //     },
-        //     where: {
-        //         username,
-        //         profile: {
-        //             gender,
-        //         },
-        //         roles: {
-        //             id: role,
-        //         },
-        //     },
-        //     take: limit, // 每页显示多少条
-        //     skip: (page - 1) * limit, // 跳过多少条
-        // });
+        const offset = (page - 1) * limit;
 
-        // SELECT `User`.`id` AS `User_id`, `User`.`username` AS `User_username`, `User`.`password` AS `User_password`, `User__User_profile`.`id` AS `User__User_profile_id`, `User__User_profile`.`gender` AS `User__User_profile_gender`
-        // 	, `User__User_profile`.`photo` AS `User__User_profile_photo`, `User__User_profi
-        // le`.`address` AS `User__User_profile_address`, `User__User_profile`.`userId` AS `User__User_profile_userId`, `User__User_roles`.`id` AS `User__User_roles_id`, `User__User_roles`.`name` AS `User__User_roles_name`
-        // FROM `user` `User`
-        // 	LEFT JOIN `profile` `User__User_profile` ON `User__User_profile`.`userId` = `Use
-        // r`.`id`
-        // 	LEFT JOIN `user_roles` `User_User__User_roles` ON `User_User__User_roles`.`userId` = `User`.`id`
-        // 	LEFT JOIN `roles` `User__User_roles` ON `User__User_roles`.`id` = `User_User__User_roles`.`rolesId`
-        // WHERE `User__User_profile`.`gender` = ?
-        // 	AND `User__User_roles`.`id` = ?
-        // 	AND `User`.`id` IN (1)
+        // const obj = {
+        //     'user.username': username,
+        //     'profile.gender': gender,
+        //     'roles.id': role,
+        // };
 
-        const obj = {
-            'user.username': username,
-            'profile.gender': gender,
-            'roles.id': role,
-        };
+        const sql = `
+            SELECT user.*, profile.*, roles.*
+            FROM user
+            LEFT JOIN profile ON user.id = profile.userId
+            LEFT JOIN user_roles ON user.id = user_roles.userId
+            LEFT JOIN roles ON user_roles.rolesId = roles.id
+            WHERE (${
+                username && `"${username}"`
+            } IS NULL OR user.username = "${username}")
+            OR profile.gender = ${gender}
+            OR roles.id = ${role}
+            LIMIT ${limit}
+            OFFSET ${offset}
+        `;
+        return await this.userRepository.query(sql);
 
-        const queryBuilder = this.userRepository
-            .createQueryBuilder('user')
-            .leftJoinAndSelect('user.profile', 'profile')
-            .leftJoinAndSelect('user.roles', 'roles');
-
-        conditionUtil_CO<User>(queryBuilder, obj);
-
-        return queryBuilder.getMany();
-
+        // const obj = {
+        //   'user.username': username,
+        //   'profile.gender': gender,
+        //   'roles.id': role,
+        // };
+        //
+        // const queryBuilder = this.userRepository
+        //   .createQueryBuilder('user')
+        //   .leftJoinAndSelect('user.profile', 'profile')
+        //   .leftJoinAndSelect('user.roles', 'roles');
+        //
+        // conditionUtil_CO<User>(queryBuilder, obj);
+        //
         // return queryBuilder.getMany();
-
-        // return this.userRepository
-        //     .createQueryBuilder('user')
-        //     .leftJoinAndSelect('user.profile', 'profile')
-        //     .leftJoinAndSelect('user.roles', 'roles')
-        //     .where(username ? 'user.username = :username' : 'TRUE', {
-        //         username,
-        //     })
-        //     .andWhere(gender ? 'profile.gender = :gender' : 'TRUE', { gender })
-        //     .andWhere(role ? 'roles.id = :role' : 'TRUE', { role })
-        //     .getMany();
     }
 
     // 根据用户 id 查询用户信息
     findProfile(id: number): Promise<User> {
-        return this.userRepository.findOne({
-            where: { id },
-            relations: {
-                profile: true,
-            },
-        });
+        const sql = `
+            SELECT user.*, profile.*
+            FROM user
+            LEFT JOIN profile ON user.id = profile.userId
+            WHERE user.id = ${id}
+        `;
+        return this.userRepository.query(sql);
+
+        // return this.userRepository.findOne({
+        //     where: { id },
+        //     relations: {
+        //         profile: true,
+        //     },
+        // });
     }
 
     // 根据 id 查询用户
@@ -109,51 +88,80 @@ export class UserService {
     }
 
     // 创建用户
-    async create(user: User): Promise<User> {
-        const userEntity: User = await this.userRepository.create(user);
-        return await this.userRepository.save(userEntity);
+    async create(user: User) {
+        // 使用sql语句创建用户
+        const sql = `
+            INSERT INTO user (username, password) VALUES ("${user.username}", "${user.password}")
+        `;
+        return await this.userRepository.query(sql);
+
+        // const userEntity: User = await this.userRepository.create(user);
+        // return await this.userRepository.save(userEntity);
     }
 
     // 根据 id 更新用户
     async update(id: number, user: Partial<User>): Promise<UpdateResult> {
-        return this.userRepository.update(id, user);
+        // 使用sql语句更新用户
+        const sql = `
+            UPDATE user SET username = "${user.username}", password = "${user.password}" WHERE id = ${id}
+        `;
+        return await this.userRepository.query(sql);
+
+        // return this.userRepository.update(id, user);
     }
 
     // 根据 id 删除用户
-    remove(id: number): Promise<DeleteResult> {
-        return this.userRepository.delete(id);
+    async remove(id: number): Promise<DeleteResult> {
+        // 使用sql语句删除用户
+        const sql = `
+            DELETE FROM user WHERE id = ${id}
+        `;
+        return await this.userRepository.query(sql);
+
+        // return this.userRepository.delete(id);
+        // const user = await this.findOne(id);
+        // return this.userRepository.remove(user);
     }
 
     // 查询用户日志
     async findUserLogs(id: number): Promise<Logs[]> {
-        const user = await this.findOne(id);
-        return this.logsRepository.find({
-            where: { user },
-            relations: {
-                user: true,
-            },
-        });
+        const sql = `
+            SELECT logs.*, user.username
+            FROM logs
+            LEFT JOIN user ON logs.userId = user.id
+            WHERE user.id = ${id}
+        `;
+
+        return await this.logsRepository.query(sql);
+
+        // const user = await this.findOne(id);
+        // return this.logsRepository.find({
+        //     where: { user },
+        //     relations: {
+        //         user: true,
+        //     },
+        // });
     }
 
     // 根据 result 查询分组日志数量
     findLogsByGroup(id: number) {
-        // return this.logsRepository.query(
-        //     `SELECT logs.result, COUNT(logs.result) AS count FROM logs, user WHERE user.id = logs.userId AND user.id = ${id} GROUP BY logs.result`,
-        // );
-        return (
-            this.logsRepository
-                .createQueryBuilder('logs')
-                .select('logs.result', 'result')
-                .addSelect('COUNT(logs.result)', 'count')
-                .leftJoinAndSelect('logs.user', 'user') // logs.user 为实体 Logs 中的 user 字段也是指向 User 实体的外键
-                .where('user.id = :id', { id })
-                .groupBy('logs.result')
-                .orderBy('count', 'DESC')
-                .addOrderBy('result', 'DESC') // 添加多个排序条件
-                // .offset(2)
-                .limit(3) // 查询前 3 条
-                .getRawMany()
+        return this.logsRepository.query(
+            `SELECT logs.result, COUNT(logs.result) AS count FROM logs, user WHERE user.id = logs.userId AND user.id = ${id} GROUP BY logs.result ORDER BY COUNT(logs.result) DESC`,
         );
+        // return (
+        //     this.logsRepository
+        //         .createQueryBuilder('logs')
+        //         .select('logs.result', 'result')
+        //         .addSelect('COUNT(logs.result)', 'count')
+        //         .leftJoinAndSelect('logs.user', 'user') // logs.user 为实体 Logs 中的 user 字段也是指向 User 实体的外键
+        //         .where('user.id = :id', { id })
+        //         .groupBy('logs.result')
+        //         .orderBy('count', 'DESC')
+        //         .addOrderBy('result', 'DESC') // 添加多个排序条件
+        //         // .offset(2)
+        //         .limit(3) // 查询前 3 条
+        //         .getRawMany()
+        // );
     }
 
     getUsers(num: any): any {
