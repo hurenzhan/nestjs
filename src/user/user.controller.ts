@@ -44,7 +44,7 @@ export class UserController {
         return this.userService.findAll(query);
     }
 
-    // 根据 id 查询用户信息
+    // 根据用户 id 查询用户信息
     @Get('profile')
     async getProfile(@Req() request): Promise<User> {
         const { id }: any = request.query;
