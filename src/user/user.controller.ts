@@ -98,6 +98,7 @@ export class UserController {
         return res?.map((item) => ({ result: item.result, count: item.count }));
     }
 
+    // 测试
     // @Get()
     // getUsers(@Req() request: any): any {
     //     console.log(request, 'request');
